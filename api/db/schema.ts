@@ -23,28 +23,46 @@ export const Users = t.pgTable("Users", {
     .notNull(),
 });
 
-// export const books = t.pgTable("books", {
-//   id: t.bigserial({ mode: "number" }).primaryKey(),
-//   title: t
-//     .varchar({
-//       length: 255,
-//     })
-//     .notNull(),
-//   author: t
-//     .varchar({
-//       length: 255,
-//     })
-//     .notNull(),
-//   publishedAt: t.timestamp().notNull(),
+export const genres = t.pgTable("genres", {
+  id: t.bigserial({ mode: "number" }).primaryKey(),
+  title: t
+    .varchar({
+      length: 255,
+    })
+    .notNull(),
+});
 
-//   genreId: t.bigint({ mode: "number" }).references(() => genres.id, {
-//     onDelete: "set null",
-//   }),
-// });
+export const books = t.pgTable("books", {
+  id: t.bigserial({ mode: "number" }).primaryKey(),
+  title: t
+    .varchar({
+      length: 255,
+    })
+    .notNull(),
+  author: t
+    .varchar({
+      length: 255,
+    })
+    .notNull(),
+  info: t
+    .varchar({
+      length: 255,
+    }),
+  summary: t
+    .varchar({
+      length: 255,
+    }),
+  publishedAt: t
+    .date({ mode: "string"}).notNull(),
 
-// export const bookRelations = relations(books, ({ one }) => ({
-//   genre: one(genres, {
-//     fields: [books.genreId],
-//     references: [genres.id],
-//   }),
-// }));
+  genreId: t.bigint({ mode: "number" }).references(() => genres.id, {
+    onDelete: "set null",
+  }),
+});
+
+export const bookRelations = relations(books, ({ one }) => ({
+  genre: one(genres, {
+    fields: [books.genreId],
+    references: [genres.id],
+  }),
+}));
