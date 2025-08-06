@@ -54,15 +54,41 @@ export const books = t.pgTable("books", {
     }),
   publishedAt: t
     .date({ mode: "string"}).notNull(),
-
-  genreId: t.bigint({ mode: "number" }).references(() => genres.id, {
-    onDelete: "set null",
-  }),
 });
 
-export const bookRelations = relations(books, ({ one }) => ({
+// export const bookRelations = relations(books, ({ one }) => ({
+//   genre: one(genres, {
+//     fields: [books.genreId],
+//     references: [genres.id],
+//   }),
+// }));
+
+export const bookGenres = t.pgTable(
+  "bookGenres",
+  {
+    bookId: t.integer().references(() => books.id, { onDelete: "cascade" }),
+    genreId: t.integer().references(() => genres.id, { onDelete: "cascade" })
+  },
+  (ta) => [
+		t.primaryKey({ columns: [ta.bookId, ta.genreId] })
+	]
+);
+
+export const bookRelations = relations(books, ({ many }) => ({
+  BooktoGenres: many(bookGenres),
+}));
+
+export const genreRelations = relations(genres, ({ many }) => ({
+  BooktoGenres: many(bookGenres),
+}));
+
+export const bookGenresRelations = relations(bookGenres, ({ one }) => ({
+  book: one(books, {
+    fields: [bookGenres.bookId],
+    references: [books.id],
+  }),
   genre: one(genres, {
-    fields: [books.genreId],
+    fields: [bookGenres.genreId],
     references: [genres.id],
   }),
 }));

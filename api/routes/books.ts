@@ -1,30 +1,68 @@
 import { Hono } from "hono";
 import drizzle from "../db/drizzle.js";
-import { books } from "../db/schema.js";
-import { eq } from "drizzle-orm";
-import { z } from "zod";
+import { books, bookGenres, genres } from "../db/schema.js";
+import { eq, sql } from "drizzle-orm";
+import { number, z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import dayjs from "dayjs";
 
 const booksRouter = new Hono();
 
 booksRouter.get("/", async (c) => {
-  const allBooks = await drizzle.select().from(books);
-  return c.json(allBooks);
+  try {
+    const allBooks = await drizzle.select({
+      id: books.id,
+      title: books.title,
+      author: books.author,
+      publishedAt: books.publishedAt,
+      info: books.info,
+      summary: books.summary,
+      genres: sql<Text>`STRING_AGG(CAST(${bookGenres.genreId} AS TEXT), ', ') as genre_id`
+    })
+    .from(books)
+    .leftJoin(bookGenres, eq(
+        bookGenres.bookId,
+        books.id
+    ))
+    .groupBy(books.id);
+
+    return c.json(allBooks);
+  } catch (error) {
+    console.error("Error fetching books:", error);
+    return c.json({ error: "Failed to fetch books" }, 500);
+  }
 });
 
 booksRouter.get("/:id", async (c) => {
   const id = Number(c.req.param("id"));
-  const result = await drizzle.query.books.findFirst({
-    where: eq(books.id, id),
-    with: {
-      genre: true,
-    },
-  });
-  if (!result) {
-    return c.json({ error: "Book not found" }, 404);
+  try {
+    const allBooks = await drizzle.select({
+      id: books.id,
+      title: books.title,
+      author: books.author,
+      publishedAt: books.publishedAt,
+      info: books.info,
+      summary: books.summary,
+      genres: sql<Text>`STRING_AGG(CAST(${bookGenres.genreId} AS TEXT), ', ') as genre_id`,
+      genresTitle: sql<Text>`STRING_AGG(CAST(${genres.title} AS TEXT), ', ') as genre_title`
+    })
+    .from(books)
+    .leftJoin(bookGenres, eq(
+        bookGenres.bookId,
+        books.id
+    ))
+    .leftJoin(genres, eq(
+        bookGenres.genreId,
+        genres.id
+    ))
+    .where(eq(books.id, id))
+    .groupBy(books.id);
+
+    return c.json(allBooks[0]);
+  } catch (error) {
+    console.error("Error fetching books:", error);
+    return c.json({ error: "Failed to fetch books" }, 500);
   }
-  return c.json(result);
 });
 
 booksRouter.post(
@@ -37,25 +75,39 @@ booksRouter.post(
       publishedAt: z.string().min(1),
       info: z.string().min(1).nullable(),
       summary: z.string().min(1).nullable(),
-      genreId: z.number().int().optional().nullable(),
+      genresId: z.array(z.number()).nullable(),
     })
-  ),
-  async (c) => {
-    const { title, author, publishedAt, genreId, info, summary } = c.req.valid("json");
-    const result = await drizzle
-      .insert(books)
-      .values({
-        title,
-        author,
-        publishedAt,
-        info,
-        summary,
-        genreId: genreId ?? null,
-      })
-      .returning();
-    return c.json({ success: true, book: result[0] }, 201);
-  }
-);
+  ), async (c) => {
+    const bookData = c.req.valid("json");
+
+    try {
+      await drizzle.transaction(async (tx) => {
+        //Insert into books table
+        const newBook = await tx.insert(books).values({
+          title: bookData.title,
+          author: bookData.author,
+          info: bookData.info,
+          summary: bookData.summary,
+          publishedAt: bookData.publishedAt,
+        }).returning();
+
+        //If genre IDs are provided, insert into junction table
+        if (bookData.genresId && Array.isArray(bookData.genresId)) {
+          bookData.genresId.forEach(async genreId => {
+            await tx.insert(bookGenres).values({
+              bookId: newBook[0].id,
+              genreId: genreId,
+            });
+          });
+        }
+      });
+      //console.log(typeof(bookData.genresId))
+      return c.json({ success: true, book: bookData }, 201);
+    } catch (error) {
+      console.error("Error adding book:", error);
+      return c.json({ error: "Failed to add book" }, 500);
+    }
+  });
 
 booksRouter.patch(
   "/:id",
@@ -67,7 +119,7 @@ booksRouter.patch(
       publishedAt: z.string().min(1).optional(),
       info: z.string().min(1).optional(),
       summary: z.string().min(1).optional(),
-      genreId: z.number().int().optional().nullable(),
+      //genresId: z.array(z.number()).optional().nullable(),
     })
   ),
   async (c) => {
