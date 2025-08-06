@@ -13,7 +13,7 @@ export const Users = t.pgTable("Users", {
       length: 255,
     })
     .notNull(),
-  user_id: t.bigserial({ mode: "number" }).notNull(),
+  userId: t.bigserial({ mode: "number" }).notNull(),
   birth: t
     .date({ mode: "string"}).notNull(),
   sex: t
@@ -64,5 +64,35 @@ export const bookRelations = relations(books, ({ one }) => ({
   genre: one(genres, {
     fields: [books.genreId],
     references: [genres.id],
+  }),
+}));
+
+export const orders = t.pgTable("orders", {
+  id: t.bigserial({ mode: "number" }).primaryKey(),
+  menuId: t
+    .bigserial({ mode: "number" })
+    .notNull().references(() => menus.id, {
+    onDelete: "set null",
+  }),
+  count: t
+    .bigserial({ mode: "number" }).notNull(),
+  annotation: t
+    .varchar({
+      length: 255,
+    })
+});
+
+export const menus = t.pgTable("menus", {
+  id: t.bigserial({ mode: "number" }).primaryKey(),
+  name: t
+    .varchar({
+      length: 255,
+    })
+});
+
+export const menuRelations = relations(orders, ({ one }) => ({
+  menu: one(menus, {
+    fields: [orders.menuId],
+    references: [menus.id],
   }),
 }));

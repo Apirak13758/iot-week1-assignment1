@@ -34,19 +34,19 @@ UsersRouter.post(
     z.object({
       name: z.string().min(1),
       surname: z.string().min(1),
-      user_id: z.number().int(),
+      userId: z.number().int(),
       birth: z.string().min(1),
       sex: z.string().min(1)
     })
   ),
   async (c) => {
-    const { name, surname, user_id, birth, sex } = c.req.valid("json");
+    const { name, surname, userId, birth, sex } = c.req.valid("json");
     const result = await drizzle
       .insert(Users)
       .values({
         name: name ?? null,
         surname: surname ?? null,
-        user_id: user_id ?? null,
+        userId: userId ?? null,
         birth: birth ?? null,
         sex: sex ?? null,
       })
@@ -60,11 +60,11 @@ UsersRouter.patch(
   zValidator(
     "json",
     z.object({
-      name: z.string().min(1),
-      surname: z.string().min(1),
-      user_id: z.number().int(),
-      birth: z.string().min(1),
-      sex: z.string().min(1)
+      name: z.string().min(1).optional(),
+      surname: z.string().min(1).optional(),
+      userId: z.number().int().optional(),
+      birth: z.string().min(1).optional(),
+      sex: z.string().min(1).optional()
       // title: z.string().min(1).optional(),
       // author: z.string().min(1).optional(),
       // publishedAt: z.iso

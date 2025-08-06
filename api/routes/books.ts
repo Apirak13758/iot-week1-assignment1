@@ -35,17 +35,21 @@ booksRouter.post(
       title: z.string().min(1),
       author: z.string().min(1),
       publishedAt: z.string().min(1),
+      info: z.string().min(1).nullable(),
+      summary: z.string().min(1).nullable(),
       genreId: z.number().int().optional().nullable(),
     })
   ),
   async (c) => {
-    const { title, author, publishedAt, genreId } = c.req.valid("json");
+    const { title, author, publishedAt, genreId, info, summary } = c.req.valid("json");
     const result = await drizzle
       .insert(books)
       .values({
         title,
         author,
         publishedAt,
+        info,
+        summary,
         genreId: genreId ?? null,
       })
       .returning();
@@ -61,7 +65,9 @@ booksRouter.patch(
       title: z.string().min(1).optional(),
       author: z.string().min(1).optional(),
       publishedAt: z.string().min(1).optional(),
-      genreId: z.number().int().optional().nullable().optional(),
+      info: z.string().min(1).optional(),
+      summary: z.string().min(1).optional(),
+      genreId: z.number().int().optional().nullable(),
     })
   ),
   async (c) => {
