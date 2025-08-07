@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import studentsRouter from "./student.js";
 import booksRouter from "./books.js";
+import bookGenresRouter from "./bookGenres.js";
 import genresRouter from "./genres.js";
 import ordersRouter from "./orders.js";
 import menusRouter from "./menus.js";
@@ -28,5 +29,6 @@ apiRouter.route("/books", booksRouter);
 apiRouter.route("/genres", genresRouter);
 apiRouter.route("/orders", ordersRouter);
 apiRouter.route("/menus", menusRouter);
+apiRouter.route("/bookGenres", bookGenresRouter);
 
 export default apiRouter;

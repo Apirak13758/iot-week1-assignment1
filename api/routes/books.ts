@@ -79,7 +79,7 @@ booksRouter.post(
     })
   ), async (c) => {
     const bookData = c.req.valid("json");
-
+    let newbookid;
     try {
       await drizzle.transaction(async (tx) => {
         //Insert into books table
@@ -100,9 +100,10 @@ booksRouter.post(
             });
           });
         }
+        newbookid = newBook[0].id
       });
       //console.log(typeof(bookData.genresId))
-      return c.json({ success: true, book: bookData }, 201);
+      return c.json({ success: true, book: bookData, bookid: newbookid}, 201);
     } catch (error) {
       console.error("Error adding book:", error);
       return c.json({ error: "Failed to add book" }, 500);

@@ -72,6 +72,15 @@ bookGenresRouter.patch(
   }
 );
 
+bookGenresRouter.delete("/:bookId/all", async (c) => {
+  const bookId = Number(c.req.param("bookId"));
+  if (isNaN(bookId)) {
+    return c.json({ error: "Invalid bookId" }, 400);
+  }
+  const deleted = await drizzle.delete(bookGenres).where(eq(bookGenres.bookId, bookId)).returning();
+  return c.json({ success: true, deletedCount: deleted.length, genres: deleted });
+});
+
 bookGenresRouter.delete("/:bookId/:genreId", async (c) => {
   const bookId = Number(c.req.param("bookId"));
   const genreId = Number(c.req.param("genreId"));
@@ -81,5 +90,6 @@ bookGenresRouter.delete("/:bookId/:genreId", async (c) => {
   }
   return c.json({ success: true, genre: deleted[0] });
 });
+
 
 export default bookGenresRouter;

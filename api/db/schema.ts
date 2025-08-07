@@ -66,8 +66,8 @@ export const books = t.pgTable("books", {
 export const bookGenres = t.pgTable(
   "bookGenres",
   {
-    bookId: t.integer().references(() => books.id, { onDelete: "cascade" }),
-    genreId: t.integer().references(() => genres.id, { onDelete: "cascade" })
+    bookId: t.bigint({ mode: "number" }).references(() => books.id, { onDelete: "cascade" }),
+    genreId: t.bigint({ mode: "number" }).references(() => genres.id, { onDelete: "cascade" })
   },
   (ta) => [
 		t.primaryKey({ columns: [ta.bookId, ta.genreId] })
