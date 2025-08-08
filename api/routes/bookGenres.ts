@@ -34,7 +34,7 @@ bookGenresRouter.post(
   zValidator(
     "json",
     z.object({
-      bookId: z.number().int().min(1),
+      bookId: z.number().int(),
       genreId: z.number().int(),
     })
   ),
@@ -56,8 +56,8 @@ bookGenresRouter.patch(
   zValidator(
     "json",
     z.object({
-      bookId: z.number().int().min(1),
-      genreId: z.number().int().min(1),
+      bookId: z.number().int(),
+      genreId: z.number().int(),
     })
   ),
   async (c) => {
